@@ -1,0 +1,157 @@
+version: "3.8"
+
+services:
+
+  # MongoDB Service
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: root
+    restart: on-failure
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+
+  # RabbitMQ Service
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    restart: on-failure
+    networks:
+      - app-network
+
+  # Jenkins Service
+  jenkins:
+    build:
+      context: ./TallerApiRest/ApiRest/jenkins
+    restart: on-failure
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - app-network
+
+  # Logs API Service
+  apilogs:
+    image: apilogs
+    build:
+      context: ./ApiLogs/ApiLogs
+    depends_on:
+      - rabbitmq
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - AUTH_API_URL=http://api:8000
+    restart: on-failure
+    volumes:
+      - logs_db:/app/logs
+    networks:
+      - app-network
+
+  # Notifications API Service
+  notificaciones:
+    build:
+      context: ./ApiNotificaciones
+    container_name: notificaciones
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      MONGO_URL: mongodb://admin:root@mongo:27017
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+  # Health Monitor API Service
+  api_monitor:
+    build:
+      context: ./ApiHealth
+    container_name: monitor
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      MONGO_URL: mongodb://admin:root@mongo:27017
+      NOTIFICATIONS_API_URL: http://notificaciones:3000/api/notifications
+    restart: on-failure
+    ports:
+      - "911:8080"
+    networks:
+      - app-network
+
+  # User Profile Service
+  user_profile_service:
+    build:
+      context: ./ApiPerfiles 
+    container_name: user_profile_service
+    depends_on:
+      - mongo
+    environment:
+      MONGO_DETAILS: mongodb://admin:root@mongo:27017 
+    restart: on-failure
+    ports:
+      - "8001:8001"
+    networks:
+      - app-network
+
+  # API Microservice
+  api:
+    image: app-python
+    build:
+      context: ./TallerApiRest/ApiRest/app-python
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      MONGO_DETAILS: mongodb://admin:root@mongo:27017
+      LOGS_API_URL: http://apilogs:8080/logs
+      NOTIFICATIONS_API_URL: http://notificaciones:3000/api/notifications
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
+  # API Gateway Service
+  api_gateway:
+    build:
+      context: ./ApiGateway 
+    container_name: api_gateway
+    depends_on:
+      - api
+      - user_profile_service
+      - rabbitmq
+    environment:
+      AUTH_SERVICE_URL: http://api:8000 
+      PROFILE_SERVICE_URL: http://user_profile_service:8001
+      RABBITMQ_SERVICE_URL: amqp://user:password@rabbitmq:5672/
+    restart: on-failure
+    ports:
+      - "5001:5000"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  jenkins_home:
+  logs_db:

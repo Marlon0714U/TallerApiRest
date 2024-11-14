@@ -1,0 +1,192 @@
+openapi: 3.0.0
+info:
+  title: API de Perfiles de Usuario
+  version: "1.0"
+paths:
+  /profile/:
+    post:
+      summary: Crear un nuevo perfil
+      tags:
+        - User Profiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileCreate'
+      responses:
+        '201':
+          description: Perfil creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+    get:
+      summary: Obtener lista de perfiles con filtros y paginación
+      tags:
+        - User Profiles
+      parameters:
+        - name: nickname
+          in: query
+          schema:
+            type: string
+          description: Filtrar por apodo
+        - name: country
+          in: query
+          schema:
+            type: string
+          description: Filtrar por país
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Saltar X registros
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Limitar número de registros
+      responses:
+        '200':
+          description: Lista de perfiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfileResponse'
+  /profile/{nickname}:
+    get:
+      summary: Obtener perfil por nickname
+      tags:
+        - User Profiles
+      parameters:
+        - name: nickname
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Perfil encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+    put:
+      summary: Actualizar perfil
+      tags:
+        - User Profiles
+      parameters:
+        - name: nickname
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+    delete:
+      summary: Eliminar perfil
+      tags:
+        - User Profiles
+      parameters:
+        - name: nickname
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Perfil eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  schemas:
+    UserProfileCreate:
+      type: object
+      properties:
+        nickname:
+          type: string
+        personal_url:
+          type: string
+          format: uri
+        contact_public:
+          type: boolean
+        address:
+          type: string
+        biography:
+          type: string
+        organization:
+          type: string
+        country:
+          type: string
+        social_links:
+          type: array
+          items:
+            type: string
+            format: uri
+    UserProfileUpdate:
+      type: object
+      properties:
+        personal_url:
+          type: string
+          format: uri
+        contact_public:
+          type: boolean
+        address:
+          type: string
+        biography:
+          type: string
+        organization:
+          type: string
+        country:
+          type: string
+        social_links:
+          type: array
+          items:
+            type: string
+            format: uri
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nickname:
+          type: string
+        personal_url:
+          type: string
+          format: uri
+        contact_public:
+          type: boolean
+        address:
+          type: string
+        biography:
+          type: string
+        organization:
+          type: string
+        country:
+          type: string
+        social_links:
+          type: array
+          items:
+            type: string
+            format: uri

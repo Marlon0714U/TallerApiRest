@@ -1,0 +1,179 @@
+openapi: 3.0.0
+info:
+  title: API Gateway
+  version: 1.0.0
+  description: API Gateway for routing authentication, registration, profile management, and health checks.
+
+paths:
+  /auth:
+    post:
+      summary: Authenticate user
+      description: Authenticates a user by forwarding the request to the authentication service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthData'
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+  /register:
+    post:
+      summary: Register new user
+      description: Registers a new user by forwarding the request to the authentication service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                username:
+                  type: string
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Bad request
+        "500":
+          description: Internal server error
+
+  /auth-profiles:
+    get:
+      summary: Retrieve user profile
+      description: Retrieves the profile data for the authenticated user by forwarding the request to the profile service.
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Profile data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileData'
+        "404":
+          description: Profile not found
+        "500":
+          description: Internal server error
+
+  /update-profile:
+    put:
+      summary: Update user profile
+      description: Updates the profile data for the authenticated user by forwarding the request to the profile service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auth_data:
+                  $ref: '#/components/schemas/AuthData'
+                profile_data:
+                  $ref: '#/components/schemas/ProfileData'
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CombinedUpdateResponse'
+        "400":
+          description: Bad request
+        "404":
+          description: Profile not found
+        "500":
+          description: Internal server error
+
+  /health:
+    get:
+      summary: Health check
+      description: Checks the health status of the API Gateway.
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "UP"
+        "503":
+          description: Service unavailable
+
+components:
+  schemas:
+    AuthData:
+      type: object
+      properties:
+        id_user:
+          type: integer
+        token:
+          type: string
+
+    ProfileData:
+      type: object
+      properties:
+        id:
+          type: integer
+        url_pagina:
+          type: string
+        apodo:
+          type: string
+        informacion_publica:
+          type: integer
+        direccion_correspondencia:
+          type: string
+        biografia:
+          type: string
+        organizacion:
+          type: string
+        pais:
+          type: string
+
+    CombinedUpdateResponse:
+      type: object
+      properties:
+        auth_data:
+          $ref: '#/components/schemas/AuthData'
+        updates_profile_response:
+          type: object
+          properties:
+            message:
+              type: string
+            detalles:
+              type: string

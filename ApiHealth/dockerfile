@@ -1,0 +1,32 @@
+# Dockerfile para la API de monitoreo en Go
+
+# Etapa de construcción
+FROM golang:1.23-alpine AS builder
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar el archivo go.mod y go.sum y descargar las dependencias
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copiar el resto del código fuente
+COPY . .
+
+# Compilar la aplicación
+RUN go build -o monitor_api
+
+# Etapa de producción
+FROM alpine:latest
+
+# Crear directorio para la aplicación
+WORKDIR /app
+
+# Copiar el binario compilado desde la etapa de construcción
+COPY --from=builder /app/monitor_api .
+
+# Exponer el puerto que usa la API
+EXPOSE 8080
+
+# Comando para ejecutar la API
+CMD ["./monitor_api"]

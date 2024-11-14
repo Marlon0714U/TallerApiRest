@@ -1,0 +1,177 @@
+definitions:
+  models.Microservice:
+    properties:
+      emails:
+        items:
+          type: string
+        type: array
+      endpoint:
+        type: string
+      frequency:
+        description: Frecuencia en segundos
+        type: integer
+      name:
+        type: string
+      status:
+        description: '"UP" o "DOWN"'
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API para el monitoreo de estado de microservicios.
+  title: API de Monitoreo de Microservicios
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Recupera el estado de salud (nombre, URL, y estado) de todos los
+        servicios registrados
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties:
+                type: string
+              type: object
+            type: array
+      summary: Obtiene el estado de todos los servicios
+      tags:
+      - Health
+  /health/{name}:
+    get:
+      description: Recupera el estado de salud de un servicio registrado por su nombre
+      parameters:
+      - description: Nombre del servicio
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Microservice'
+        "404":
+          description: Service not found
+          schema:
+            type: string
+      summary: Obtiene el estado de un servicio específico
+      tags:
+      - Health
+  /services:
+    get:
+      description: Recupera una lista de todos los microservicios monitoreados en
+        el sistema
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Microservice'
+            type: array
+      summary: Obtiene todos los servicios registrados
+      tags:
+      - Services
+    post:
+      consumes:
+      - application/json
+      description: Registra un nuevo microservicio en el sistema de monitoreo
+      parameters:
+      - description: Datos del servicio
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/models.Microservice'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Microservice'
+      summary: Registra un nuevo servicio
+      tags:
+      - Services
+  /services/{name}:
+    delete:
+      description: Elimina un microservicio registrado del sistema de monitoreo
+      parameters:
+      - description: Nombre del servicio
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Microservicio eliminado exitosamente
+          schema:
+            type: string
+        "500":
+          description: Error al eliminar el microservicio
+          schema:
+            type: string
+      summary: Elimina un servicio
+      tags:
+      - Services
+    get:
+      description: Recupera los datos completos de un microservicio registrado por
+        su nombre
+      parameters:
+      - description: Nombre del servicio
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Microservice'
+        "404":
+          description: Service not found
+          schema:
+            type: string
+      summary: Obtiene los datos de un servicio específico
+      tags:
+      - Services
+    put:
+      description: Modifica los datos de un microservicio registrado
+      parameters:
+      - description: Nombre del servicio
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Datos actualizados del servicio
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/models.Microservice'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Microservice'
+        "500":
+          description: Error al actualizar el microservicio
+          schema:
+            type: string
+      summary: Actualiza un servicio existente
+      tags:
+      - Services
+swagger: "2.0"
